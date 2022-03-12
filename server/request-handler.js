@@ -11,8 +11,9 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
+const exampleData = [{ "message_id": 57080, "roomname": "lobby", "text": "asdfasdf", "username": "asdfasdf", "github_handle": "jakemgilfix", "campus": "rfp", "created_at": "2022-03-11T22:57:17.164Z", "updated_at": "2022-03-11T22:57:17.164Z" }, { "message_id": 57079, "roomname": "lobby", "text": "CASEY'S NOT HERE RIGHT NOW PLEASE TRY AGAIN LATER", "username": "asdfasdf", "github_handle": "jakemgilfix", "campus": "rfp", "created_at": "2022-03-11T21:23:07.685Z", "updated_at": "2022-03-11T21:23:07.685Z" }, { "message_id": 57078, "roomname": null, "text": "knock knock Casey", "username": null, "github_handle": "bogdangordin", "campus": "rfp", "created_at": "2022-03-11T20:58:10.977Z", "updated_at": "2022-03-11T20:58:10.977Z" }];
 
-var requestHandler = function(request, response) {
+var requestHandler = function (request, response) {
   // Request and Response come from node's http module.
   //
   // They include information about both the incoming request, such as
@@ -33,19 +34,25 @@ var requestHandler = function(request, response) {
   // console.log('Entire request:' + Object.keys(request));
 
   // const exampleData = [{"message_id":57080,"roomname":"lobby","text":"asdfasdf","username":"asdfasdf","github_handle":"jakemgilfix","campus":"rfp","created_at":"2022-03-11T22:57:17.164Z","updated_at":"2022-03-11T22:57:17.164Z"},{"message_id":57079,"roomname":"lobby","text":"CASEY'S NOT HERE RIGHT NOW PLEASE TRY AGAIN LATER","username":"asdfasdf","github_handle":"jakemgilfix","campus":"rfp","created_at":"2022-03-11T21:23:07.685Z","updated_at":"2022-03-11T21:23:07.685Z"},{"message_id":57078,"roomname":null,"text":"knock knock Casey","username":null,"github_handle":"bogdangordin","campus":"rfp","created_at":"2022-03-11T20:58:10.977Z","updated_at":"2022-03-11T20:58:10.977Z"}];
-  const exampleData = [];
 
-  const collectedData = (request) => {
-    var data = '';
-    request.on('data', (chunk) => {
-      data += chunk;
-    });
-    request.on('end', () => {
-      // console.log(data);
-      exampleData.unshift(JSON.parse(data));
-      console.log(exampleData);
-    });
-  };
+  // request.on('end', () => {
+
+  //   // console.log(data);
+  //   exampleData.unshift(JSON.parse(data));
+  //   console.log(exampleData);
+  // });
+
+  // const collectedData = (request) => {
+  //   var data = '';
+  //   request.on('data', (chunk) => {
+  //     data += chunk;
+  //   });
+  //   request.on('end', () => {
+  //     // console.log(data);
+  //     exampleData.unshift(JSON.parse(data));
+  //     console.log(exampleData);
+  //   });
+  // };
 
   // We will probably deal only with the situation where the request.url = /classes/messages/
   if (request.url === '/classes/messages') {
@@ -56,27 +63,67 @@ var requestHandler = function(request, response) {
       headers['Content-Type'] = 'text/plain';
       response.writeHead(statusCode, headers);
       response.end(JSON.stringify(exampleData));
+      //console.log('Result of GET');
+      //console.log(exampleData);
 
     } else if (request.method === 'POST') {
 
+      var data = '';
+      request.on('data', (chunk) => {
+        data += chunk; // COMMAND+d shortcut key
+        exampleData.unshift(JSON.parse(data));
+        console.log(JSON.parse(data));
+        // console.log(exampleData);
+        console.log('data:' + data.text); // be careful with variable types and +
+        // type coercion
+        // Notes: know readable streams,
+
+        if (JSON.parse(data).text === '') {
+
+          var statusCode = 400;
+          var headers = defaultCorsHeaders;
+          headers['Content-Type'] = 'text/plain';
+          response.writeHead(statusCode, headers);
+          response.end('done');
+
+        } else if (JSON.parse(data).username.includes('<')) {
+
+          var statusCode = 400;
+          var headers = defaultCorsHeaders;
+          headers['Content-Type'] = 'text/plain';
+          response.writeHead(statusCode, headers);
+          response.end('done');
+
+        } else if (JSON.parse(data).text.includes('<')) {
+
+          var statusCode = 400;
+          var headers = defaultCorsHeaders;
+          headers['Content-Type'] = 'text/plain';
+          response.writeHead(statusCode, headers);
+          response.end('done');
+        } else {
+          var statusCode = 201;
+          var headers = defaultCorsHeaders;
+          headers['Content-Type'] = 'text/plain';
+          response.writeHead(statusCode, headers);
+          response.end('done');
+
+        }
+      });
       // collectedData(request);
 
-      var statusCode = 201;
-      var headers = defaultCorsHeaders;
-      headers['Content-Type'] = 'text/plain';
-      response.writeHead(statusCode, headers);
-      collectedData(request, () => {response.end});
-
-      // add some logic specifying that it should push the new message into our data structure so that a future get request will contain the new message
-
     }
+
+    // collectedData(request, () => {response.end});
+    // add some logic specifying that it should push the new message into our data structure so that a future get request will contain the new message
+
   } else {
 
     // Deal with POST
     // Deal with GET
 
     // The outgoing status.
-    var statusCode = 200;
+    var statusCode = 404;
 
     // See the note below about CORS headers.
     var headers = defaultCorsHeaders;
@@ -118,5 +165,8 @@ var defaultCorsHeaders = {
   'access-control-max-age': 10 // Seconds.
 };
 
-module.exports.handleRequest = requestHandler;
+
+
+
+module.exports.handleRequest = module.exports.requestHandler = requestHandler;
 module.exports.defaultCorsHeaders = defaultCorsHeaders;

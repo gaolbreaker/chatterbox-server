@@ -91,4 +91,46 @@ describe('Node Server Request Listener Function', function() {
     expect(res._ended).to.equal(true);
   });
 
+  it('Should 400 when user submits no Message/Text values', function() {
+    var stubMsg = {
+      username: 'Anonymous',
+      text: ''
+    };
+    var req = new stubs.request('/classes/messages', 'POST', stubMsg);
+    var res = new stubs.response();
+
+    handler.requestHandler(req, res);
+
+    // Expect 400 Created response status
+    expect(res._responseCode).to.equal(400);
+  });
+
+  it('Should 400 when user submits html text in username', function() {
+    var stubMsg = {
+      username: '<div>Anonymous</div>',
+      text: 'hello world!'
+    };
+    var req = new stubs.request('/classes/messages', 'POST', stubMsg);
+    var res = new stubs.response();
+
+    handler.requestHandler(req, res);
+
+    // Expect 201 Created response status
+    expect(res._responseCode).to.equal(400);
+  });
+
+  it('Should 400 when user submits html text in text', function() {
+    var stubMsg = {
+      username: 'Pineapple',
+      text: '<div>Anonymous</div>'
+    };
+    var req = new stubs.request('/classes/messages', 'POST', stubMsg);
+    var res = new stubs.response();
+
+    handler.requestHandler(req, res);
+
+    // Expect 201 Created response status
+    expect(res._responseCode).to.equal(400);
+  });
+
 });
