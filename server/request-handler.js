@@ -28,31 +28,76 @@ var requestHandler = function(request, response) {
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
+  // console.log('Request.url:' + request.url);
+  // console.log('Request.method:' + request.method);
+  // console.log('Entire request:' + Object.keys(request));
 
-  // The outgoing status.
-  var statusCode = 200;
+  // const exampleData = [{"message_id":57080,"roomname":"lobby","text":"asdfasdf","username":"asdfasdf","github_handle":"jakemgilfix","campus":"rfp","created_at":"2022-03-11T22:57:17.164Z","updated_at":"2022-03-11T22:57:17.164Z"},{"message_id":57079,"roomname":"lobby","text":"CASEY'S NOT HERE RIGHT NOW PLEASE TRY AGAIN LATER","username":"asdfasdf","github_handle":"jakemgilfix","campus":"rfp","created_at":"2022-03-11T21:23:07.685Z","updated_at":"2022-03-11T21:23:07.685Z"},{"message_id":57078,"roomname":null,"text":"knock knock Casey","username":null,"github_handle":"bogdangordin","campus":"rfp","created_at":"2022-03-11T20:58:10.977Z","updated_at":"2022-03-11T20:58:10.977Z"}];
+  const exampleData = [];
 
-  // See the note below about CORS headers.
-  var headers = defaultCorsHeaders;
+  const collectedData = (request) => {
+    var data = '';
+    request.on('data', (chunk) => {
+      data += chunk;
+    });
+    request.on('end', () => {
+      // console.log(data);
+      exampleData.unshift(JSON.parse(data));
+      console.log(exampleData);
+    });
+  };
 
-  // Tell the client we are sending them plain text.
-  //
-  // You will need to change this if you are sending something
-  // other than plain text, like JSON or HTML.
-  headers['Content-Type'] = 'text/plain';
+  // We will probably deal only with the situation where the request.url = /classes/messages/
+  if (request.url === '/classes/messages') {
+    if (request.method === 'GET') {
+      // return parsable stringified JSON
+      var statusCode = 200;
+      var headers = defaultCorsHeaders;
+      headers['Content-Type'] = 'text/plain';
+      response.writeHead(statusCode, headers);
+      response.end(JSON.stringify(exampleData));
+    } else if (request.method === 'POST') {
 
-  // .writeHead() writes to the request line and headers of the response,
-  // which includes the status and all headers.
-  response.writeHead(statusCode, headers);
+      // collectedData(request);
 
-  // Make sure to always call response.end() - Node may not send
-  // anything back to the client until you do. The string you pass to
-  // response.end() will be the body of the response - i.e. what shows
-  // up in the browser.
-  //
-  // Calling .end "flushes" the response's internal buffer, forcing
-  // node to actually send all the data over to the client.
-  response.end('Hello, World!');
+      var statusCode = 201;
+      var headers = defaultCorsHeaders;
+      headers['Content-Type'] = 'text/plain';
+      response.writeHead(statusCode, headers);
+      response.end(JSON.stringify(exampleData), () => {collectedData(request)});
+      // add some logic specifying that it should push the new message into our data structure so that a future get request will contain the new message
+
+    }
+  } else {
+
+    // Deal with POST
+    // Deal with GET
+
+    // The outgoing status.
+    var statusCode = 200;
+
+    // See the note below about CORS headers.
+    var headers = defaultCorsHeaders;
+
+    // Tell the client we are sending them plain text.
+    //
+    // You will need to change this if you are sending something
+    // other than plain text, like JSON or HTML.
+    headers['Content-Type'] = 'text/plain';
+
+    // .writeHead() writes to the request line and headers of the response,
+    // which includes the status and all headers.
+    response.writeHead(statusCode, headers);
+
+    // Make sure to always call response.end() - Node may not send
+    // anything back to the client until you do. The string you pass to
+    // response.end() will be the body of the response - i.e. what shows
+    // up in the browser.
+    //
+    // Calling .end "flushes" the response's internal buffer, forcing
+    // node to actually send all the data over to the client.
+    response.end('Hello, World!');
+  }
 };
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
@@ -70,3 +115,6 @@ var defaultCorsHeaders = {
   'access-control-allow-headers': 'content-type, accept, authorization',
   'access-control-max-age': 10 // Seconds.
 };
+
+module.exports.handleRequest = requestHandler;
+module.exports.defaultCorsHeaders = defaultCorsHeaders;
