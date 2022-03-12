@@ -56,6 +56,7 @@ var requestHandler = function(request, response) {
       headers['Content-Type'] = 'text/plain';
       response.writeHead(statusCode, headers);
       response.end(JSON.stringify(exampleData));
+
     } else if (request.method === 'POST') {
 
       // collectedData(request);
@@ -64,7 +65,8 @@ var requestHandler = function(request, response) {
       var headers = defaultCorsHeaders;
       headers['Content-Type'] = 'text/plain';
       response.writeHead(statusCode, headers);
-      response.end(JSON.stringify(exampleData), () => {collectedData(request)});
+      collectedData(request, () => {response.end});
+
       // add some logic specifying that it should push the new message into our data structure so that a future get request will contain the new message
 
     }
